@@ -7,6 +7,7 @@ import com.example.ecommercespringboot.entity.User;
 import com.example.ecommercespringboot.repository.UserRepository;
 import com.example.ecommercespringboot.service.AuthService;
 import com.example.ecommercespringboot.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,7 +66,7 @@ public class AuthController {
             response.getWriter().write(new JSONObject()
                     .put("userId", optionalUser.get().getId())
                     .put("role", optionalUser.get().getRole())
-                    .put("token", jwt) // ✅ Trả về token luôn
+                    .put("token", jwt) // ✅ Trả về token
                     .toString());
 
             response.addHeader("Access-Control-Expose-Headers", "Authorization");
@@ -73,6 +75,27 @@ public class AuthController {
 
             response.addHeader(HEADER_STRING, TOKEN_PREFIX + jwt);
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        // Lấy token từ Header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body("No token provided");
+        }
+        String token = authHeader.substring(7);
+
+        // Cập nhật token với thời gian hết hạn ngay lập tức
+        String expiredToken = jwtUtil.invalidateToken(token);
+
+        // Xóa Security Context
+        SecurityContextHolder.clearContext();
+
+        // Gửi lại token hết hạn về client (có thể không cần)
+        response.addHeader("Authorization", "Bearer " + expiredToken);
+
+        return ResponseEntity.ok("Logged out successfully");
     }
 
     @PostMapping("/sign-up")

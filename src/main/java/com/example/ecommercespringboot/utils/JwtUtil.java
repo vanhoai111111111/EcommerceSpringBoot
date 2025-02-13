@@ -40,7 +40,19 @@ public class JwtUtil {
                 .compact();
 
     }
+    public String invalidateToken(String token) {
+        String username = extractUsername(token);
+        Map<String, Object> claims = new HashMap<>();
 
+        // Tạo token mới với thời gian hết hạn ngay lập tức
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis())) // Hết hạn ngay lập tức
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);

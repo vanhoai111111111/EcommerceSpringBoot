@@ -1,6 +1,7 @@
 package com.example.ecommercespringboot.config;
 
 import com.example.ecommercespringboot.filters.JwtRequestFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,17 +25,25 @@ public class WebSecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // Tắt CSRF bằng API mới
+                .csrf(csrf -> csrf.disable()) // Tắt CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/authenticate", "/sign-up", "/order/**").permitAll() // Các endpoint public
-                        .requestMatchers("/api/**").authenticated() // Các endpoint yêu cầu xác thực
+                        .requestMatchers("/authenticate", "/sign-up", "/order/**").permitAll() // Các endpoint công khai
+                        .requestMatchers("/api/**").authenticated() // Các API yêu cầu xác thực
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Stateless session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Không dùng session
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout") // Xử lý logout
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                            response.getWriter().write("{\"message\": \"Đăng xuất thành công!\"}");
+                        })
                 )
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class) // Thêm JwtRequestFilter
                 .build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
