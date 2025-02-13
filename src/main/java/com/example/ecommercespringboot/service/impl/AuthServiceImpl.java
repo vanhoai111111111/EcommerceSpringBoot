@@ -54,16 +54,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @PostConstruct
-    public void createAdminAccount(){
+    public void createAdminAccount() {
         User adminAccount = userRepository.findByRole(UserRole.ADMIN);
-        if (null == adminAccount) {
+        if (adminAccount == null) {
             User user = new User();
             user.setEmail("admin@gmail.com");
             user.setName("admin");
             user.setRole(UserRole.ADMIN);
-            user.setPassword(new BCryptPasswordEncoder().encode("admin"));
+            user.setPassword(passwordEncoder.encode("admin")); // ✅ Sử dụng passwordEncoder
             userRepository.save(user);
         }
     }
+
 
 }
