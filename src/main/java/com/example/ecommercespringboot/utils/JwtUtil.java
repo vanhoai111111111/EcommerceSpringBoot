@@ -9,6 +9,7 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.JwtParser;
@@ -23,7 +24,8 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    public static final String SECRET = "413F4428472B4B6250655368566D5970337336763979244226452948404D6351";
+    @Value("${jwt.secret}")  // Lấy giá trị từ application.properties
+    private String secret;
 
     public String generateToken(String userName) {
         Map<String, Object> claims = new HashMap<>();
@@ -54,7 +56,7 @@ public class JwtUtil {
                 .compact();
     }
     private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
